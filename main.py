@@ -2,9 +2,6 @@ from matriz import Matriz
 from typing import List
 import copy
 
-mat = Matriz([[1, 2, 3], [0, 4, 5], [6, 7, 8]], [[2, 3, 5], [1, 4, 0], [6, 7, 8]], "euclidiana")
-poss = mat.best_first()
-
 def exibe_matriz(mat: List[List]):
     for linha in mat:
         for ele in linha:
@@ -25,6 +22,6 @@ def recebeEstadoFinalUsuario()->List:
     return res
 
 estadoFinal = recebeEstadoFinalUsuario()
-mat = Matriz(copy.deepcopy(estadoFinal), estadoFinal, "quantidade_blocos_errados")
+mat = Matriz(copy.deepcopy(estadoFinal), estadoFinal, "A*", "quantidade_blocos_errados")
 mat.user_embaralha()
-mat.resolve_best_first()
+mat.resolve()

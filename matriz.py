@@ -6,7 +6,7 @@ import os
 import time
 
 class Matriz:
-    def __init__(self, estadoAtual: List[List], estadoFinal: List[List], heuristica: str):
+    def __init__(self, estadoAtual: List[List], estadoFinal: List[List], algo: str, heuristica: str):
         self.estadoAtual = estadoAtual
         self.estadoFinal = estadoFinal
         if heuristica == "euclidiana":
@@ -15,6 +15,11 @@ class Matriz:
             self.heuristica = self._dist_manhattan
         elif heuristica == "quantidade_blocos_errados":
             self.heuristica = self._item_esta_no_lugar_errado
+
+        if algo == "A*":
+            self.algo = self.a_estrela
+        elif algo == "BF":
+            self.algo = self.best_first
 
     def _limpar_tela(self):
         os.system('cls' if os.name == 'nt' else 'clear')
@@ -96,8 +101,9 @@ class Matriz:
             for item in linha:
                 xI = linha.index(item)
 
-                xF, yF = self._busca_no_estado(item, self.estadoFinal)
-                res += self.heuristica(xI, yI, xF, yF)
+                if item != 0:
+                    xF, yF = self._busca_no_estado(item, self.estadoFinal)
+                    res += self.heuristica(xI, yI, xF, yF)
 
         return res
     
@@ -143,6 +149,9 @@ class Matriz:
     def a_estrela(self)->List[List[List]]:
         fila = [(self.estadoAtual, self._calcula_heuristica(self.estadoAtual), 0, [self.estadoAtual])]
 
+        # usando set pois é uma tabela hash e a busca funciona em O(1), ao contrário da List
+        visited = set()
+
         res = [self.estadoAtual]
 
         while self.estadoAtual != self.estadoFinal:
@@ -151,8 +160,14 @@ class Matriz:
             res = fila[0][3]
             fila.pop(0)
 
+            # para adicionar em um set precisa ser hashable => transformar estado em tupla
+            atualTupla = tuple(tuple(linha) for linha in self.estadoAtual)
+            visited.add(atualTupla)
+
             for possibilidade in self._gera_possibilidades_movimento():
-                self._insere_ordenado_a_estrela(fila, (possibilidade, self._calcula_heuristica(possibilidade), nivel_atual + 1, res+[possibilidade]))
+                possTupla = tuple(tuple(linha) for linha in possibilidade)
+                if not possTupla in visited:
+                    self._insere_ordenado_a_estrela(fila, (possibilidade, self._calcula_heuristica(possibilidade), nivel_atual + 1, res+[possibilidade]))
         
         return res
     
@@ -255,22 +270,8 @@ class Matriz:
             print()
         print()
 
-    def resolve_a_estrela(self):
-        res = self.a_estrela()
-
-        self._exibe_estado_atual()
-        self._exibe_matriz(self.estadoFinal)
-
-        for mat in res:
-            self._limpar_tela()
-            print("Resolvendo...")
-
-            self._exibe_matriz(mat)
-
-            time.sleep(1.5)
-
-    def resolve_best_first(self):
-        res = self.best_first()
+    def resolve(self):
+        res = self.algo()
 
         self._exibe_estado_atual()
         self._exibe_matriz(self.estadoFinal)
